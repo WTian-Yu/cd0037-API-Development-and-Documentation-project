@@ -88,7 +88,7 @@ def create_app(test_config=None):
             )
             
         except:            
-            abort(422)
+            abort(404)
     
     # Endpoint to POST a new question
     # If request body include search term do search
@@ -101,7 +101,7 @@ def create_app(test_config=None):
         category = body.get("category", None)
         difficulty = body.get("difficulty", None)
         searchTerm = body.get("searchTerm", None)    
-
+        
         try:
             if(searchTerm):
                 questions = Question.query.order_by(Question.category).filter(
@@ -113,6 +113,12 @@ def create_app(test_config=None):
                             ,'total_questions':len(questions)
                             ,'current_category':None})
             else:
+                if(question is None or
+                   answer is None or
+                   category is None or
+                   difficulty is None
+                   ):
+                    abort(400)
                 new_question = Question(
                     question=question,
                     answer=answer,
@@ -146,22 +152,21 @@ def create_app(test_config=None):
             abort(422)
 
     """
+    POST endpoint to get questions to play the quiz.
     
     This endpoint should take category and previous question parameters
     and return a random questions within the given category,
     if provided, and that is not one of the previous questions.
-
-    TEST: In the "Play" tab, after a user selects "All" or a category,
-    one question at a time is displayed, the user is allowed to answer
-    and shown whether they were correct or not.
     """
-    # POST endpoint to get questions to play the quiz.
     @app.route('/quizzes', methods=['POST'])
     def get_quiz_questions():
-        try:
-            response = request.get_json()
-            previous_questions = response['previous_questions']
-            quiz_category_id = response['quiz_category']
+        body = request.get_json()
+        previous_questions = body.get("previous_questions", None)
+        quiz_category_id = body.get("quiz_category", None)
+        if(previous_questions is None or quiz_category_id is None):
+            abort(400)
+        
+        try:  
             if quiz_category_id == 0:
                 remain_questions = Question.query.filter(~Question.id.in_(previous_questions)).all()
             else:
@@ -179,20 +184,20 @@ def create_app(test_config=None):
     @app.errorhandler(404)
     def not_found(error):
         return (
-            jsonify({"success": False, "error": 404, "message": "resource not found"}),
+            jsonify({"success": False, "error": 404, "message": "Resource Not Found"}),
             404,
         )
 
     @app.errorhandler(422)
     def unprocessable(error):
         return (
-            jsonify({"success": False, "error": 422, "message": "unprocessable"}),
+            jsonify({"success": False, "error": 422, "message": "Not Processable"}),
             422,
         )
 
     @app.errorhandler(400)
     def bad_request(error):
-        return jsonify({"success": False, "error": 400, "message": "bad request"}), 400
+        return jsonify({"success": False, "error": 400, "message": "Bad Request"}), 400
 
     return app
 
