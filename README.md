@@ -65,6 +65,16 @@ psql trivia_test < trivia.psql
 python test_flaskr.py
 ```
 
+[Notice] Some tests cases need to be test before insert data into db, so we test them first then insert data and finally test other endpoints
+
+To deploy the tests, run
+```bash
+dropdb trivia_test
+createdb trivia_test
+python test_flaskr_empty_table.py
+```
+
+
 ### Frontend
 
 #### Installing Dependencies
